@@ -41,13 +41,96 @@
   "Space face."
   :group 'ws-eso)
 
+;; ------------------------------------------------------------
+;;* Font / Display
+
 (defvar ws-eso-font-lock
   '(("\\(\t+\\)" (1 'ws-eso-tab-face))
     ("\\( +\\)" (1 'ws-eso-space-face))))
 
+;; http://compsoc.dur.ac.uk/whitespace/whitespace-mode.el
+(defvar ws-eso-characters
+  '((9 . "[TAB]")
+    (32 . "[SPC]"))
+  "Alist of characters and mappings to the strings they should display as.")
+	
+(defun ws-eso-set-display ()
+  "Set up the display of characters for Whitespace esoteric mode.
+
+This walks across `ws-eso-characters' and sets the
+`buffer-display-table' accordingly."
+  (let ((display-table (make-display-table)))
+    (dolist (el ws-eso-characters)
+      (aset display-table (car el) (string-to-vector (cdr el))))
+    (setq buffer-display-table display-table)))
+
+
+;; ------------------------------------------------------------
+;;* User Functions
+
+(defvar-local ws-eso-lf nil)
+(defun ws-eso-toggle-lf ()
+  "Toggle [LF] display on/off."
+  (interactive)
+  (if ws-eso-lf
+    (ws-eso-set-display)
+    (let ((ws-eso-characters (append ws-eso-characters
+                                     '((10 . "[LF]")))))
+      (ws-eso-set-display)))
+  (setq ws-eso-lf (not ws-eso-lf)))
+
 (defun ws-eso-wtf-p ()
   (interactive)
   (browse-url "http://compsoc.dur.ac.uk/whitespace/tutorial.html"))
+
+;; docs
+(defvar ws-eso-data nil)
+(defvar ws-eso-dir nil)
+(setq ws-eso-dir
+      (when load-file-name
+        (file-name-directory load-file-name)))
+
+(defun ws-eso-load-docs (file)
+  (with-temp-buffer
+    (insert-file-contents file)
+    (car (read-from-string (buffer-substring-no-properties (point-min)
+                                                           (point-max))))))
+
+(defun ws-eso-docs ()
+  (interactive)
+  (let* ((dat (or ws-eso-data
+                  (ws-eso-load-docs (expand-file-name "tables.dat" ws-eso-dir))))
+         (num (ido-completing-read "Table: " dat)))
+    (get-buffer-create "*Whitespace Info*")
+    (with-current-buffer "*Whitespace Info*"
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (ws-eso-format (cdr (assoc-string num dat)))
+        (goto-char (point-min))))
+    (pop-to-buffer "*Whitespace Info*")))
+
+(defun ws-eso-format (data)
+  (insert (mapconcat 'identity (append (assoc-string "head" data) nil) "\t\t"))
+  (goto-char (point-max))
+  (insert ("\n---------------------------------------------\n"))
+  (goto-char (point-max))
+  (let ((rows (assoc-string "rows" (append data nil)))
+        (hdrs (length (assoc-string "head" data))))
+    (cl-loop for td in rows
+       for i from 1 to (length rows)
+       do (progn
+            (insert td "\t\t")
+            (goto-char (point-max))
+            (when (= 0 (mod i hdrs) (insert "\n") (goto-char (point-max))))))))
+
+;; ------------------------------------------------------------
+;; Numbers: [SPC][TAB|SPC]..[SPC|TAB]*...[LF]
+;;           ... [ - | + ]..[ 0 | 1 ] ...
+(defun ws-eso-number-start ())
+
+
+;; ------------------------------------------------------------
+;;* Mode
 
 (defvar ws-eso-mode-syntax-table
   (let ((st (make-syntax-table)))
@@ -67,36 +150,10 @@
     (define-key map (kbd "SPC")     #'self-insert-command)
     (define-key map (kbd "TAB")     #'self-insert-command)
     (define-key map (kbd "RET")     #'newline)
-    (define-key map (kbd "C-c ?")   #'ws-eso-wtf-p)
+    (define-key map (kbd "C-c ?")   #'ws-eso-docs)
+    (define-key map (kbd "C-c C-?") #'ws-eso-wtf-p)
     (define-key map (kbd "C-c C-t") #'ws-eso-toggle-lf)
     map))
-
-(defvar-local ws-eso-lf nil)
-(defun ws-eso-toggle-lf ()
-  "Toggle [LF] display on/off."
-  (interactive)
-  (if ws-eso-lf
-    (ws-eso-set-display)
-    (let ((ws-eso-characters (append ws-eso-characters
-                                     '((10 . "[LF]")))))
-      (ws-eso-set-display)))
-  (setq ws-eso-lf (not ws-eso-lf)))
-
-;; http://compsoc.dur.ac.uk/whitespace/whitespace-mode.el
-(defvar ws-eso-characters
-  '((9 . "[TAB]")
-    (32 . "[SPC]"))
-  "Alist of characters and mappings to the strings they should display as.")
-	
-(defun ws-eso-set-display ()
-  "Set up the display of characters for Whitespace esoteric mode.
-
-This walks across `ws-eso-characters' and sets the
-`buffer-display-table' accordingly."
-  (let ((display-table (make-display-table)))
-    (dolist (el ws-eso-characters)
-      (aset display-table (car el) (string-to-vector (cdr el))))
-    (setq buffer-display-table display-table)))
 
 ;;;###autoload
 (define-derived-mode ws-eso-mode prog-mode "WS"

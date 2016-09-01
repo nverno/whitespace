@@ -11,6 +11,7 @@ files=("http://compsoc.dur.ac.uk/whitespace/whitespace-mode.el"
 
 declare -A repos=( 
     ["https://github.com/nverno/whitespace"]="whitespace"
+    ["https://github.com/nverno/whitespacers"]="interpreters"
 )
 
 # get files
