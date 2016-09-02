@@ -1,4 +1,4 @@
-;;; whitespace-esoteric --- Emacs major mode for whitespace esoteric language
+;;; whitespace-esoteric.el --- Emacs major mode for whitespace esoteric language
 
 ;; Author: Noah Peart <noah.v.peart@gmail.com>
 ;; URL: https://github.com/nverno/whitespace
@@ -28,6 +28,7 @@
 ;; Emacs major mode for whitespace esoteric language
 
 ;;; Code:
+
 (eval-when-compile
   (require 'org-table))
 
