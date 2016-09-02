@@ -1,4 +1,4 @@
-;;; whitespace-esoteric --- 
+;;; whitespace-esoteric --- Emacs major mode for whitespace esoteric language
 
 ;; Author: Noah Peart <noah.v.peart@gmail.com>
 ;; URL: https://github.com/nverno/whitespace
@@ -25,7 +25,11 @@
 
 ;;; Commentary:
 
+;; Emacs major mode for whitespace esoteric language
+
 ;;; Code:
+(eval-when-compile
+  (require 'org-table))
 
 (defgroup ws-eso nil
   "Whitespace esoteric mode."
@@ -97,31 +101,20 @@ This walks across `ws-eso-characters' and sets the
                                                            (point-max))))))
 
 (defun ws-eso-docs ()
+  "Print descriptive tables as org-mode tables."
   (interactive)
   (let* ((dat (or ws-eso-data
                   (ws-eso-load-docs (expand-file-name "tables.dat" ws-eso-dir))))
-         (num (ido-completing-read "Table: " dat)))
+         (tname (ido-completing-read "Table: " dat)))
     (get-buffer-create "*Whitespace Info*")
     (with-current-buffer "*Whitespace Info*"
-      (let ((inhibit-read-only t))
+      (let ((inhibit-read-only t)
+            (dat (cadr (assoc-string tname dat))))
         (erase-buffer)
-        (ws-eso-format (cdr (assoc-string num dat)))
+        (org-mode)
+        (insert (orgtbl-to-orgtbl dat nil))
         (goto-char (point-min))))
     (pop-to-buffer "*Whitespace Info*")))
-
-(defun ws-eso-format (data)
-  (insert (mapconcat 'identity (append (assoc-string "head" data) nil) "\t\t"))
-  (goto-char (point-max))
-  (insert ("\n---------------------------------------------\n"))
-  (goto-char (point-max))
-  (let ((rows (assoc-string "rows" (append data nil)))
-        (hdrs (length (assoc-string "head" data))))
-    (cl-loop for td in rows
-       for i from 1 to (length rows)
-       do (progn
-            (insert td "\t\t")
-            (goto-char (point-max))
-            (when (= 0 (mod i hdrs) (insert "\n") (goto-char (point-max))))))))
 
 ;; ------------------------------------------------------------
 ;; Numbers: [SPC][TAB|SPC]..[SPC|TAB]*...[LF]
@@ -142,7 +135,8 @@ This walks across `ws-eso-characters' and sets the
 (defvar ws-eso-menu
   '("WS"
     ["Toggle LF" ws-eso-toggle-lf :help "Toggle line-feed display"]
-    ["WTF" ws-eso-wtf-p]))
+    ["Info Tables" ws-eso-docs :help "Display info tables as org-tables"]
+    ["WTF" ws-eso-wtf-p :help "Open the tutorial page"]))
 
 (defvar ws-eso-mode-map
   (let ((map (make-sparse-keymap)))
