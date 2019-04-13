@@ -2,7 +2,7 @@
 
 ;; Author: Noah Peart <noah.v.peart@gmail.com>
 ;; URL: https://github.com/nverno/whitespace
-;; Last modified: <2019-04-10.21>
+;; Last modified: <2019-04-13.03>
 ;; Created: 31 August 2016
 
 ;;; Commentary:
@@ -45,7 +45,7 @@
 
 ;;; Docs
 (defvar wsp-docs
-  (let* ((dir (nvp-path 'dfn :path (nvp-load-file-name)))
+  (let* ((dir (nvp-path 'dn (nvp-load-file-name)))
          (docs (expand-file-name "docs/tables.el" dir)))
     (with-temp-buffer
       (insert-file-contents-literally docs)
