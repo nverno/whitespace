@@ -49,7 +49,7 @@
          (docs (expand-file-name "docs/tables.el" dir)))
     (with-temp-buffer
       (insert-file-contents-literally docs)
-      (car (read-from-string (nvp-s 'bs))))))
+      (car (read-from-string (buffer-string))))))
 
 (defun wsp-docs ()
   "Show docs in org tables."
